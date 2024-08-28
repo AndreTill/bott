@@ -1,0 +1,33 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "npx tsx watch src/index.ts",
+    "lint": "npx eslint \"src/**/*.ts\"",
+    "lint:fix": "npm eslint \"src/**/*.ts\" --fix",
+    "generate": "npx drizzle-kit generate",
+    "push": "npx drizzle-kit push",
+    "migrate": "npx drizzle-kit migrate",
+    "studio": "npx drizzle-kit studio",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@gramio/auto-retry": "^0.0.3",
+    "@gramio/autoload": "^1.1.0",
+    "@gramio/media-cache": "^0.0.4",
+    "@gramio/media-group": "^0.0.4",
+    "@gramio/prompt": "^0.1.0",
+    "@gramio/session": "^0.1.5",
+    "better-sqlite3": "^11.1.2",
+    "drizzle-orm": "^0.33.0",
+    "gramio": "^0.0.46"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.24.0",
+    "@types/node": "^20.14.15",
+    "drizzle-kit": "^0.24.0",
+    "eslint": "^9.8.0",
+    "eslint-plugin-drizzle": "^0.2.3",
+    "husky": "^9.1.4",
+    "typescript": "^5.5.4"
+  }
+}
