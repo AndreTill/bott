@@ -17,17 +17,27 @@
     "@gramio/media-group": "^0.0.4",
     "@gramio/prompt": "^0.1.0",
     "@gramio/session": "^0.1.5",
-    "better-sqlite3": "^11.1.2",
+    "@libsql/client": "^0.14.0",
+    "better-sqlite3": "^11.6.0",
+    "dotenv": "^16.4.5",
     "drizzle-orm": "^0.33.0",
-    "gramio": "^0.0.46"
+    "gramio": "^0.0.46",
+    "pg": "^8.13.1",
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.24.0",
+    "@eslint/js": "^9.16.0",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^20.14.15",
-    "drizzle-kit": "^0.24.0",
-    "eslint": "^9.8.0",
+    "@types/pg": "^8.11.10",
+    "drizzle-kit": "^0.24.2",
+    "eslint": "^9.16.0",
     "eslint-plugin-drizzle": "^0.2.3",
+    "globals": "^15.12.0",
     "husky": "^9.1.4",
-    "typescript": "^5.5.4"
+    "tsx": "^4.19.2",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.16.0"
   }
 }

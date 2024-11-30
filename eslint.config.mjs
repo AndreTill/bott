@@ -1,13 +1,12 @@
-import antfu from '@antfu/eslint-config'
-import drizzle from 'eslint-plugin-drizzle'
+import globals from "globals";
+import pluginJs from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-export default antfu(
-  {
-  },
-  {
-    files: ['**/*.js', '**/*.ts'],
-    plugins: {
-      drizzle,
-    },
-  },
-)
+
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  {files: ["**/*.{js,mjs,cjs,ts}"]},
+  {languageOptions: { globals: globals.node }},
+  pluginJs.configs.recommended,
+  ...tseslint.configs.recommended,
+];
