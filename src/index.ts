@@ -1,15 +1,9 @@
-import { Bot } from 'gramio'
-import { mediaGroup } from '@gramio/media-group'
-import { autoRetry } from '@gramio/auto-retry'
-import { mediaCache } from '@gramio/media-cache'
-import { session } from '@gramio/session'
-import { prompt } from '@gramio/prompt'
-import { autoload } from '@gramio/autoload'
-import { Bot, MediaInput, MediaUpload, InlineKeyboard } from "gramio";
+import { Telegraf } from 'telegraf'
+import { message } from 'telegraf/filters'
 import * as fs from 'fs';
 import * as path from 'path';
 
-let i = 0
+const bot = new Telegraf("2019283473:AAGD0ToEHPfc5R1sghPZmQEo9xz39Sa6j8I")
 
 function getFilesInDirectory(directoryPath: string): string[] {
     try {
@@ -34,26 +28,67 @@ const filespath = files.map(item => `./img/${item}`)
 
 console.log(...filespath)
 
-let medias = filespath.map((item) => 
-  MediaInput.document(MediaUpload.path(item))
-);
-
-const bot = new Bot("2019283473:AAENlInr0R01Bnr_af1i585yPPQgNpdy5E8")
-  .extend(mediaGroup())
-  .extend(autoRetry())
-  .extend(mediaCache())
-  .extend(session())
-  .extend(prompt())
-  .extend(autoload({
-      failGlob: false
-  }))
-//    .on("message", context => 
-//	context.sendDocument(MediaUpload.path("./img/" + files[i])) && i == files.length - 1 ?  i = 0 : i++ 
-//    )
-.command('photos', context => context.sendMediaGroup(medias))
-.command('videos', context => context.sendMediaGroup(medias))
-.command('start', context => context.send('Hi!'))
-  .onStart(({ info }) => console.log(`✨ Bot ${info.username} was started!`))
+let medias = filespath
 
 
-bot.start()
+
+bot.command('photos', async (ctx) => {
+    ctx.replyWithMediaGroup(
+        medias.map((media) => {
+            return {
+                type: 'photo',
+                media: { source: media }
+            }
+        })
+    )
+}) 
+
+bot.command('videos', async (ctx) => {
+    ctx.replyWithMediaGroup(
+        medias.map((media) => {
+            return {
+                type: 'photo',
+                media: { source: media }
+            }
+        })
+    )
+}) 
+
+bot.command('quit', async (ctx) => {
+  // Explicit usage
+  await ctx.telegram.leaveChat(ctx.message.chat.id)
+
+  // Using context shortcut
+  await ctx.leaveChat()
+})
+
+bot.on(message('text'), async (ctx) => {
+  // Explicit usage
+  await ctx.telegram.sendMessage(ctx.message.chat.id, `Hello ${ctx.state.role}`)
+
+  // Using context shortcut
+  await ctx.reply(`Hello ${ctx.state.role}`)
+})
+
+bot.on('callback_query', async (ctx) => {
+  // Explicit usage
+  await ctx.telegram.answerCbQuery(ctx.callbackQuery.id)
+
+  // Using context shortcut
+  await ctx.answerCbQuery()
+})
+
+bot.on('inline_query', async (ctx) => {
+  const result = []
+  // Explicit usage
+  await ctx.telegram.answerInlineQuery(ctx.inlineQuery.id, result)
+
+  // Using context shortcut
+  await ctx.answerInlineQuery(result)
+})
+
+bot.launch()
+
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'))
+process.once('SIGTERM', () => bot.stop('SIGTERM'))
