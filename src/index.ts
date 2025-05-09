@@ -1,5 +1,7 @@
 import { Telegraf } from 'telegraf'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { message } from 'telegraf/filters'
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -52,42 +54,22 @@ bot.command('videos', async (ctx) => {
             }
         })
     )
+
 }) 
 
-bot.command('quit', async (ctx) => {
-  // Explicit usage
-  await ctx.telegram.leaveChat(ctx.message.chat.id)
-
-  // Using context shortcut
-  await ctx.leaveChat()
+bot.on(message('text'), (ctx) => {
+    ctx.reply('Hello! I am a bot. Send /photos to get photos or /videos to get videos.')
 })
 
-bot.on(message('text'), async (ctx) => {
-  // Explicit usage
-  await ctx.telegram.sendMessage(ctx.message.chat.id, `Hello ${ctx.state.role}`)
-
-  // Using context shortcut
-  await ctx.reply(`Hello ${ctx.state.role}`)
-})
-
-bot.on('callback_query', async (ctx) => {
-  // Explicit usage
-  await ctx.telegram.answerCbQuery(ctx.callbackQuery.id)
-
-  // Using context shortcut
-  await ctx.answerCbQuery()
-})
-
-bot.on('inline_query', async (ctx) => {
-  const result = []
-  // Explicit usage
-  await ctx.telegram.answerInlineQuery(ctx.inlineQuery.id, result)
-
-  // Using context shortcut
-  await ctx.answerInlineQuery(result)
-})
-
-bot.launch()
+bot.launch({
+    dropPendingUpdates: true,
+    allowedUpdates: ['message', 'edited_message', 'channel_post', 'edited_channel_post', 'inline_query', 'chosen_inline_result', 'callback_query', 'shipping_query', 'pre_checkout_query', 'poll', 'poll_answer']
+}).then(() => {
+    console.log('Bot started');
+}).catch((error) => {  
+    console.error('Error starting bot:', error);
+}
+)   
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'))
