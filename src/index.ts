@@ -5,7 +5,17 @@ import { message } from 'telegraf/filters'
 import * as fs from 'fs';
 import * as path from 'path';
 
+import express from 'express';
+
+const app = express();
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
+
 const bot = new Telegraf("2019283473:AAGD0ToEHPfc5R1sghPZmQEo9xz39Sa6j8I")
+
 
 function getFilesInDirectory(directoryPath: string): string[] {
     try {
