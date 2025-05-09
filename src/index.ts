@@ -50,8 +50,9 @@ const bot = new Bot("2019283473:AAENlInr0R01Bnr_af1i585yPPQgNpdy5E8")
 //    .on("message", context => 
 //	context.sendDocument(MediaUpload.path("./img/" + files[i])) && i == files.length - 1 ?  i = 0 : i++ 
 //    )
-  .command('photos', context => context.sendMediaGroup(medias))
-  .command('start', context => context.send('Hi!'))
+.command('photos', context => context.sendMediaGroup(medias))
+.command('videos', context => context.sendMediaGroup(medias))
+.command('start', context => context.send('Hi!'))
   .onStart(({ info }) => console.log(`✨ Bot ${info.username} was started!`))
 
 
