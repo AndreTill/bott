@@ -5,13 +5,17 @@ import { message } from 'telegraf/filters'
 import * as fs from 'fs';
 import * as path from 'path';
 import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 import { VK } from 'vk-io';
 import { response } from 'express';
 const bot = new Telegraf("2019283473:AAFe_aV5VeqD27P34rqcwnboEF5hrtrZa9o");
 
 const vk = new VK({
-    token: '1e37ff6c1e37ff6c1e37ff6c581d02b49311e371e37ff6c7668fda8eaea121ef85f9fd9'
+    token: '1e37ff6c1e37ff6c1e37ff6c581d02b49311e371e37ff6c7668fda8eaea121ef85f9fd9',
+    apiMode: 'sequential',
+    apiVersion: '5.199',
+    language: 'ru'
 });
 
 function resolve_dev(input: any): string {
@@ -38,15 +42,24 @@ function resolve_dev(input: any): string {
 
 async function run(): Promise<string> {
     var res = ""
-    res += "::: VK :::"
-    const response = await vk.api.users.get({
+    await vk.api.users.get({
         user_ids: [ 'katya_bach' ],
         fields: [ 'online' , 'online_info', 'last_seen' ]
+    }).then((response) => {
+    if (response.length === 0) {
+        console.error('No user found');
+        return [];
+    }
+    // Assuming response is an array with at least one user object
+    console.log('User data:', response[0]);
+    res += "   [ ::: VK ::: " + response[0]['first_name'] + ' ' + response[0]['last_name'] + "](https://vk.com/id" + response[0]['id'] + ") с " + resolve_dev(response[0]["last_seen"]['platform']) + " ";
+    res += `\n   ${format(new Date(response[0]['last_seen'].time * 1000), 'dd MM yyyy в HH:mm')}`;
+    res += `\n   ${response[0]['online'] ? 'Online' : format(new Date(response[0].last_seen.time * 1000), 'dd MMMM yyyy в HH:mm', { locale: ru })} `;
+    }).catch((err) => {
+        console.error('Error fetching user data:', err);
     });
     
-    res += "   " + response[0]['first_name'] + ' ' + response[0]['last_name'];
-    res += `   ${format(new Date(response[0]['last_seen'].time * 1000), 'dd MM yyyy в HH:mm')} с ${resolve_dev(response[0]["last_seen"]['platform'])}`;
-    return res
+     return res
 };
 
 
@@ -77,9 +90,12 @@ console.log(...filespath)
 const medias = filespath
 
 bot.command('status', async (ctx) => {
-    await run().catch(resp => {ctx.sendMessage(resp)})
+    var res = await run();
 
-   })
+    ctx.reply(res, {
+        parse_mode: 'Markdown'
+    });
+})
 
 
 bot.command('photos', async (ctx) => {
