@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  node-app:
+    image: debian:latest
+    container_name: telegram-node-app-1
+    volumes:
+      - ./node-debian-service/:/opt/app/
+    working_dir: /opt/app/
+    restart: on-failure
+    command: ["apt update && apt install -y ts-node &&  ts-node ./src/index.ts"]
+#    command: [" ls -l ."]
+    #command: ["node", "./src/index.js"]
