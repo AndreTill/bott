@@ -97,22 +97,33 @@ async function run(): Promise<string> {
     await vk.api.users.get({
         user_ids: [ 'katya_bach' ],
         fields: [ 'online' , 'online_info', 'last_seen', 'followers_count', 'counters' ]
-	 }).then((response) => {
-
+	 }).then((response) => {      
             res += "   [ ::: VK ::: " + response[0]['first_name'] + ' ' + response[0]['last_name'] + "](https://vk.com/id" + response[0]['id'] + ") с " + resolve_dev(response[0]["last_seen"]['platform']) + " ";
             res += `\n   ${response[0]['online'] ? 'Online' : 'Offline'} `;
             res += `\n   ${format(new Date(response[0].last_seen.time * 1000), 'dd MMMM yyyy в HH:mm',{ locale: ru })} `;
-            res += `\n   ${response[0]['followers_count'] - response[0]['counters']['followers']} друзей `;
-            res += `\n   ${response[0]['counters']['pages']} групп `;
-            res += `\n   ${response[0]['counters']['followers']} подписчиков `;
-            res += `\n   ${response[0]['counters']['subscriptions']} подписок `;
-            res += `\n   ${response[0]['counters']['photos']} фотографий `;
-            res += `\n   ${response[0]['counters']['videos']} видео `;
-        
-db.run(`INSERT OR REPLACE INTO users (user_id, friends, groups, followers, subscriptions, photos, videos, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [response[0]['id'], response[0]['counters']['friends'], response[0]['counters']['pages'], response[0]['counters']['followers'], response[0]['counters']['subscriptions'], response[0]['counters']['photos'], response[0]['counters']['videos'], new Date()],
-        (err) => {
-            if (err) {
+
+            db.run(`SELECT * FROM users WHERE user_id = ?`, [response[0]['id']], (err, row) => {
+                if (row.friends < (response[0]['followers_count'] - response[0]['counters']['followers'])) {
+                    res += `\n   ${response[0]['followers_count'] - response[0]['counters']['followers'] - row.friends} новых друзей `;
+                }
+                if (row.groups < response[0]['counters']['pages']) {
+                    res += `\n   ${response[0]['counters']['pages'] - row.groups} новых групп `;
+                }
+                if (row.followers < response[0]['counters']['followers']) {
+                    res += `\n   ${response[0]['counters']['followers'] - row.followers} новых подписчиков `;
+                }
+                if (row.subscriptions < response[0]['counters']['subscriptions']) {
+                    res += `\n   ${response[0]['counters']['subscriptions'] - row.subscriptions} новых подписок `;
+                }
+                if (row.photos < response[0]['counters']['photos']) {
+                    res += `\n   ${response[0]['counters']['photos'] - row.photos} новых фотографий `;
+                }       
+            })
+
+        db.run(`INSERT OR REPLACE INTO users (user_id, friends, groups, followers, subscriptions, photos, videos, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [response[0]['id'], response[0]['counters']['friends'], response[0]['counters']['pages'], response[0]['counters']['followers'], response[0]['counters']['subscriptions'], response[0]['counters']['photos'], response[0]['counters']['videos'], new Date()],
+            (err) => {
+                if (err) {
                 console.error('Error inserting or updating user data:', err.message);
             } else {
                 console.log('User data inserted or updated successfully.');

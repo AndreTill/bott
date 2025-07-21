@@ -1,0 +1,52 @@
+---
+- name: Setup Docker and run a container
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Install Docker
+      tags: docker-install
+      ansible.builtin.package:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      tags: docker-install
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull app sources
+      tags: src
+      ansible.builtin.git:
+        repo: 'https://github.com/AndreTill/bott.git'
+        dest: /opt/bott
+        force: yes
+        clone: yes
+        update: yes
+        accept_hostkey: yes
+        version: 'dev'
+ 
+    - name: Get Content
+      tags: content-copy
+      ansible.builtin.shell:
+        cmd: "scp -r vps.andretill.ru:/root/bott/img/* /opt/bott/img"
+
+
+    - name: Copy Docker Compose file
+      tags: docker-copy
+      copy:
+        src: "{{ item }}"
+        dest: "/opt/bott/{{ item }}"
+        mode: '0777'
+      with_items:
+        - docker-compose.yml
+        - Dockerfile
+
+    - name: Start Docker Compose
+      tags: docker-up
+      community.docker.docker_compose_v2:
+        project_src: /opt/bott
+      register: compose_result
+
+    - debug: msg="{{ compose_result }}"

@@ -1,13 +1,14 @@
-version: '3.8'
+#version: '3.8'
+
 
 services:
-  node-app:
+  bott:
     image: debian:latest
-    container_name: telegram-node-app-1
+    container_name: bott
+    privileged: true
+    network_mode: host 
     volumes:
-      - ./node-debian-service/:/opt/app/
-    working_dir: /opt/app/
+      - ./:/opt/bott
+    working_dir: /opt/bott
+    command: /bin/bash -c "apt update && apt install -y ts-node npm && npm install && npm run dev"
     restart: on-failure
-    command: ["apt update && apt install -y ts-node &&  ts-node ./src/index.ts"]
-#    command: [" ls -l ."]
-    #command: ["node", "./src/index.js"]
