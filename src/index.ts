@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 import { VK } from 'vk-io';
+import { runInContext } from 'vm';
 
 var debug_mode = false;
 
@@ -37,7 +38,7 @@ var db: Database = new Database('./db/bot.db', (err) => {
 
 db.serialize(() => {
     var res = "";
-    db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, rows) => {
+    db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, rows) => {
         if (err) {
             console.error('Error fetching table names:', err.message);
         } else {
@@ -53,29 +54,20 @@ db.serialize(() => {
             } else {
                 console.log('Tables already exist in the database.');
                 console.log('Tables in the database:', rows.map(row => row.name));
-                console.log('User\'s history: ', rows.map(row => {
-
-                res += "   ::: VK ID ::: " + row.user_id;
-                res += `\n   ${row.friends} друзей `;
-                res += `\n   ${row.groups} групп `;
-                res += `\n   ${row.followers} подписчиков `;
-                res += `\n   ${row.subscriptions} подписок `;
-                res += `\n   ${row.photos} фотографий `;
-                res += `\n   ${row.videos} видео `;
-                return res;
-                }));
             }
         }
+
     });
 });
 
 const bot = new Telegraf("2019283473:AAFe_aV5VeqD27P34rqcwnboEF5hrtrZa9o");
 
 const vk = new VK({
-    token: '1e37ff6c1e37ff6c1e37ff6c581d02b49311e371e37ff6c7668fda8eaea121ef85f9fd9',
-    apiMode: 'sequential',
+    token: '08a3b99a08a3b99a08a3b99a9b0b96f265008a308a3b99a60dec3210126ad85e0b936d2',
     apiVersion: '5.199',
-    language: 'ru'
+    language: 'ru',
+
+
 });
 
 function resolve_dev(input: any): string {
@@ -104,52 +96,9 @@ async function run(): Promise<string> {
     var res = ""
     await vk.api.users.get({
         user_ids: [ 'katya_bach' ],
-        fields: [ 'online' , 'online_info', 'last_seen', 'followers_count', 'counters' , 'contacts']
-    }).then((response) => {
-        if (response.length === 0) {
-            console.error('No user found');
-            return [];
-        }
-        db.get("SELECT * FROM users WHERE user_id = ?", [response[0].id], (err, row) => {
-            if (err) {
-                console.error('Error fetching user data from database:', err.message);
-                return;
-            }
-            if (!row) {
-                db.run("INSERT INTO users (user_id, friends, groups, followers, subscriptions, photos, videos) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-                [response[0].id, 
-                response[0].counters.friends,
-                response[0].counters.groups,
-                response[0].counters.followers,
-                response[0].counters.subscriptions,
-                response[0].counters.photos,
-                response[0].counters.videos], (err) => {
-                    if (err) {
-                        console.error('Error inserting user data into database:', err.message);
-                    } else {
-                        console.log('User data inserted into database successfully.');
-                    }
-                });
-            } else {
-                db.run("UPDATE users SET friends = ?, groups = ?, followers = ?, subscriptions = ?, photos = ?, videos = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?", 
-                [response[0].counters.friends,
-                response[0].counters.groups,
-                response[0].counters.followers,
-                response[0].counters.subscriptions,
-                response[0].counters.photos,
-                response[0].counters.videos,
-                response[0].id], (err) => {
-                    if (err) {
-                        console.error('Error updating user data in database:', err.message);
-                    } else {
-                        console.log('User data updated in database successfully.');
-                    }
-                });
-            }
-        });
-    }).finally(() => {
-        if (debug_mode) {
-            console.log('User data:', response[0]);
+        fields: [ 'online' , 'online_info', 'last_seen', 'followers_count', 'counters' ]
+	 }).then((response) => {
+
             res += "   [ ::: VK ::: " + response[0]['first_name'] + ' ' + response[0]['last_name'] + "](https://vk.com/id" + response[0]['id'] + ") с " + resolve_dev(response[0]["last_seen"]['platform']) + " ";
             res += `\n   ${response[0]['online'] ? 'Online' : 'Offline'} `;
             res += `\n   ${format(new Date(response[0].last_seen.time * 1000), 'dd MMMM yyyy в HH:mm',{ locale: ru })} `;
@@ -158,11 +107,23 @@ async function run(): Promise<string> {
             res += `\n   ${response[0]['counters']['followers']} подписчиков `;
             res += `\n   ${response[0]['counters']['subscriptions']} подписок `;
             res += `\n   ${response[0]['counters']['photos']} фотографий `;
-            res += `\n   ${response[0]['counters']['videos']} видео `; 
-            console.log(res); 
+            res += `\n   ${response[0]['counters']['videos']} видео `;
+        
+db.run(`INSERT OR REPLACE INTO users (user_id, friends, groups, followers, subscriptions, photos, videos, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [response[0]['id'], response[0]['counters']['friends'], response[0]['counters']['pages'], response[0]['counters']['followers'], response[0]['counters']['subscriptions'], response[0]['counters']['photos'], response[0]['counters']['videos'], new Date()],
+        (err) => {
+            if (err) {
+                console.error('Error inserting or updating user data:', err.message);
+            } else {
+                console.log('User data inserted or updated successfully.');
+            }
         }
-        return res;
-    });
+    );
+
+            console.log('User data:', response[0]);
+
+    })
+    return res;
 }
 
 
@@ -201,13 +162,15 @@ const medias = filespath
 var step = 0;
 
 bot.command('status', async (ctx) => {
-run().then((res) => {
-        ctx.reply(res);
-    }).catch((error) => {
-        console.error('Error fetching status:', error);
-        ctx.reply('Error fetching status');
-    });
-})
+ run().then((res) => {
+    ctx.replyWithMarkdownV2(
+        res);
+}).catch((error) => {   
+    console.error('Error fetching status:', error);
+    ctx.reply('Failed to fetch status. Please try again later.');   
+});
+});
+
 
 
 bot.command('photos', async (ctx) => {
