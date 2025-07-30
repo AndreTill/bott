@@ -2,4 +2,4 @@
 vps.andretill.ru ansible_network_os=1
 
 [servers]
-node-2 ansible_user=root ansible_become_user=root ansible_port=22 ansible_become=yes ansible_become_password="22342234"
+vps ansible_user=root ansible_become_user=root ansible_port=22 ansible_become=yes ansible_become_password="22342234"
