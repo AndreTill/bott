@@ -16,16 +16,16 @@
         state: started
         enabled: true
 
-    - name: Pull app sources
-      tags: src
-      ansible.builtin.git:
-        repo: 'https://github.com/AndreTill/bott.git'
-        dest: /opt/bott
-        force: yes
-        clone: yes
-        update: yes
-        accept_hostkey: yes
-        version: "dev"
+    # - name: Pull app sources
+    #   tags: src
+    #   ansible.builtin.git:
+    #     repo: 'https://github.com/AndreTill/bott.git'
+    #     dest: /opt/bott
+    #     force: yes
+    #     clone: yes
+    #     update: yes
+    #     accept_hostkey: yes
+    #     version: "dev"
 
     - name: Copy Installer
       copy:
