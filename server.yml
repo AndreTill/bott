@@ -25,6 +25,7 @@
         clone: yes
         update: yes
         accept_hostkey: yes
+        version: "dev"
 
     - name: Copy Installer
       copy:
