@@ -10,9 +10,13 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 import { VK } from 'vk-io';
+import { VKOptions } from 'vk-io/types';
 import { runInContext } from 'vm';
 
-var debug_mode = false;
+
+require('dotenv').config();
+
+var debug_mode = process.env.DEBUG || false;
 
 var db: Database = new Database('./db/bot.db', (err) => {
     if (err) {
@@ -63,11 +67,9 @@ db.serialize(() => {
 const bot = new Telegraf("2019283473:AAFe_aV5VeqD27P34rqcwnboEF5hrtrZa9o");
 
 const vk = new VK({
-    token: '08a3b99a08a3b99a08a3b99a9b0b96f265008a308a3b99a60dec3210126ad85e0b936d2',
+    token: '4cac33034cac33034cac3303d54f9b814344cac4cac330324262ce764612746ff2ad3fb',
     apiVersion: '5.199',
     language: 'ru',
-
-
 });
 
 function resolve_dev(input: any): string {
@@ -97,31 +99,17 @@ async function run(): Promise<string> {
     await vk.api.users.get({
         user_ids: [ 'katya_bach' ],
         fields: [ 'online' , 'online_info', 'last_seen', 'followers_count', 'counters' ]
-	 }).then((response) => {      
+    }).then((response) => {      
             res += "   [ ::: VK ::: " + response[0]['first_name'] + ' ' + response[0]['last_name'] + "](https://vk.com/id" + response[0]['id'] + ") с " + resolve_dev(response[0]["last_seen"]['platform']) + " ";
             res += `\n   ${response[0]['online'] ? 'Online' : 'Offline'} `;
-            res += `\n   ${format(new Date(response[0].last_seen.time * 1000), 'dd MMMM yyyy в HH:mm',{ locale: ru })} `;
-
-            db.run(`SELECT * FROM users WHERE user_id = ?`, [response[0]['id']], (err, row) => {
-                if (row.friends < (response[0]['followers_count'] - response[0]['counters']['followers'])) {
-                    res += `\n   ${response[0]['followers_count'] - response[0]['counters']['followers'] - row.friends} новых друзей `;
-                }
-                if (row.groups < response[0]['counters']['pages']) {
-                    res += `\n   ${response[0]['counters']['pages'] - row.groups} новых групп `;
-                }
-                if (row.followers < response[0]['counters']['followers']) {
-                    res += `\n   ${response[0]['counters']['followers'] - row.followers} новых подписчиков `;
-                }
-                if (row.subscriptions < response[0]['counters']['subscriptions']) {
-                    res += `\n   ${response[0]['counters']['subscriptions'] - row.subscriptions} новых подписок `;
-                }
-                if (row.photos < response[0]['counters']['photos']) {
-                    res += `\n   ${response[0]['counters']['photos'] - row.photos} новых фотографий `;
-                }       
-            })
-
+            res += `\n   ${format(new Date((response[0].last_seen.time * 1000 - 7200)), 'dd MMMM yyyy в HH:mm',{ locale: ru })} `;
+                    res += `\n   ${response[0]['followers_count'] - response[0]['counters']['followers']} друзей `;
+                    res += `\n   ${response[0]['counters']['pages']} групп `;
+                    res += `\n   ${response[0]['counters']['followers']}  подписчиков `;
+                    res += `\n   ${response[0]['counters']['subscriptions']} подписок `;
+                    res += `\n   ${response[0]['counters']['photos']} фотографий `;
         db.run(`INSERT OR REPLACE INTO users (user_id, friends, groups, followers, subscriptions, photos, videos, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [response[0]['id'], response[0]['counters']['friends'], response[0]['counters']['pages'], response[0]['counters']['followers'], response[0]['counters']['subscriptions'], response[0]['counters']['photos'], response[0]['counters']['videos'], new Date()],
+            [response[0]['id'], (response[0]['followers_count'] - response[0]['counters']['followers']), response[0]['counters']['pages'], response[0]['counters']['followers'], response[0]['counters']['subscriptions'], response[0]['counters']['photos'], response[0]['counters']['videos'], new Date()],
             (err) => {
                 if (err) {
                 console.error('Error inserting or updating user data:', err.message);
@@ -186,7 +174,9 @@ bot.command('status', async (ctx) => {
 
 bot.command('photos', async (ctx) => {
     var fls = [];
-        for (let i = 1; i < 11; i += 1) {
+    var j = 11;
+    if (medias.length < 10) j = medias.length
+        for (let i = 1; i < j; i += 1) {
             fls.push(medias[step + i]);
             step += 1;
             if (step >= medias.length) {
