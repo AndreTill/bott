@@ -16,10 +16,14 @@ import { VKOptions } from 'vk-io/types';
 import { runInContext } from 'vm';
 import { stringify } from 'querystring';
 
+import * as env from 'dotenv';
 
-require('dotenv').config();
 
-var debug_mode = process.env.DEBUG || false;
+
+// Load environment variables from .env file
+const envv = env.config({ path: path.resolve(__dirname, '../.env') });
+console.log('Environment variables loaded:', envv.parsed.DEBUG);
+var debug_mode: Boolean = (envv.parsed.DEBUG === 'true') ? true : false;
 
 // var db: Database = new Database('./db/bot.db', (err) => {
 //     if (err) {
@@ -50,14 +54,15 @@ var debug_mode = process.env.DEBUG || false;
     videos: number;
   };
 
-  var hist: History = {
-    friends: 0,
-    groups: 0,
-    followers: 0,
-    subscriptions: 0,
-    photos: 0,
-    videos: 0
-  };
+  var hist: History
+//    = {
+//     friends: 0,
+//     groups: 0,
+//     followers: 0,
+//     subscriptions: 0,
+//     photos: 0,
+//     videos: 0
+//   };
 
 // db.serialize(() => {
 //     var res = "";
@@ -122,11 +127,22 @@ async function run(): Promise<string> {
             res += "   [ ::: VK ::: " + response[0]['first_name'] + ' ' + response[0]['last_name'] + "](https://vk.com/id" + response[0]['id'] + ") с " + resolve_dev(response[0]["last_seen"]['platform']) + " ";
             res += `\n   ${response[0]['online'] ? 'Online' : 'Offline'} `;
             res += `\n   ${format(new Date((response[0].last_seen.time * 1000 - 7200)), 'dd MMMM yyyy в HH:mm',{ locale: ru })} `;
-            if (hist.friends !== (response[0]['followers_count'] - response[0]['counters']['followers'])) res += `\n   ${response[0]['followers_count'] - response[0]['counters']['followers'] - hist.friends} новых друзей `;
-            if (hist.groups !== response[0]['counters']['pages']) res += `\n   ${response[0]['counters']['pages'] - hist.groups} новых групп `;
-            if (hist.followers !== response[0]['counters']['followers']) res += `\n   ${response[0]['counters']['followers'] - hist.followers} новых подписчиков `;
-            if (hist.subscriptions !== response[0]['counters']['subscriptions']) res += `\n   ${response[0]['counters']['subscriptions'] - hist.subscriptions} новых подписок `;
-            if (hist.photos !== response[0]['counters']['photos']) res += `\n   ${response[0]['counters']['photos'] - hist.photos} новых фотографий `;
+            if (hist) {
+                if (hist.friends !== (response[0]['followers_count'] - response[0]['counters']['followers'])) res += `\n   ${response[0]['followers_count'] - response[0]['counters']['followers'] - hist.friends} новых друзей `;
+                if (hist.groups !== response[0]['counters']['pages']) res += `\n   ${response[0]['counters']['pages'] - hist.groups} новых групп `;
+                if (hist.followers !== response[0]['counters']['followers']) res += `\n   ${response[0]['counters']['followers'] - hist.followers} новых подписчиков `;
+                if (hist.subscriptions !== response[0]['counters']['subscriptions']) res += `\n   ${response[0]['counters']['subscriptions'] - hist.subscriptions} новых подписок `;
+                if (hist.photos !== response[0]['counters']['photos']) res += `\n   ${response[0]['counters']['photos'] - hist.photos} новых фотографий `;
+            } else {
+                hist = {
+                    friends: 0,
+                    groups: 0,
+                    followers: 0,
+                    subscriptions: 0,
+                    photos: 0,
+                    videos: 0
+                };
+            };
 
             hist.friends = (response[0]['followers_count'] - response[0]['counters']['followers']);
             hist.groups = response[0]['counters']['pages'];
