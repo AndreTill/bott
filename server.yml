@@ -16,22 +16,35 @@
         state: started
         enabled: true
 
-    - name: Pull app sources
-      tags: src
-      ansible.builtin.git:
-        repo: 'https://github.com/AndreTill/bott.git'
-        dest: /opt/bott
-        force: yes
-        clone: yes
-        update: yes
-        accept_hostkey: yes
-        version: 'dev'
- 
-    - name: Get Content
-      tags: content-copy
-      ansible.builtin.shell:
-        cmd: "scp -r vps.andretill.ru:/root/bott/img/* /opt/bott/img"
+    # - name: Pull app sources
+    #   tags: src
+    #   ansible.builtin.git:
+    #     repo: 'https://github.com/AndreTill/bott.git'
+    #     dest: /opt/bott
+    #     force: yes
+    #     clone: yes
+    #     update: yes
+    #     accept_hostkey: yes
+    #     version: "dev"
 
+    - name: Copy Installer
+      get_url:
+        url: https://github.com/goharbor/harbor/releases/download/v2.13.1/harbor-offline-installer-v2.13.1.tgz
+        dest: /tmp
+
+    - name: Unpack
+      unarchive:
+        src: /tmp/harbor-offline-installer-v2.13.1.tgz
+        dest: /srv
+
+    - name: Template config
+      template:
+        src: harbor.yml.j2
+        dest: /srv/harbor/harbor.yml
+        mode: 0777
+
+    - name: Install harbor
+      shell: /srv/harbor/install.sh
 
     - name: Copy Docker Compose file
       tags: docker-copy
