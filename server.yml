@@ -28,10 +28,9 @@
     #     version: "dev"
 
     - name: Copy Installer
-      copy:
-        src: https://github.com/goharbor/harbor/releases/download/v2.13.1/harbor-offline-installer-v2.13.1.tgz
+      get_url:
+        url: https://github.com/goharbor/harbor/releases/download/v2.13.1/harbor-offline-installer-v2.13.1.tgz
         dest: /tmp
-        mode: 0777
 
     - name: Unpack
       unarchive:

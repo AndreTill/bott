@@ -6,11 +6,10 @@ services:
     image: bott:latest
     container_name: bott
     privileged: true
-    network_mode: host
     environment:
       - TZ=Europe/Moscow
     volumes:
       - ./:/opt/bott
     working_dir: /opt/bott
-    command: /bin/bash -c "npm run dev"
+    command: /bin/bash -c "npm install -D && npm run dev"
     restart: always
