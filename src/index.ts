@@ -134,7 +134,8 @@ async function run(): Promise<string> {
             res += "[ ::: VK ::: " + response[0]['first_name'] + ' ' + response[0]['last_name'] + "](https://vk.com/id" + response[0]['id'] + " ) ";
             res += "\n ```";
             res += `\n | Cтатус     \t| ${response[0]['online'] ? 'Online' : 'Offline'} `;
-            res += `\n | Заходил    \t| ${format(new Date((response[0].last_seen.time * 1000 - 7200)), 'dd MMMM yyyy в HH:mm',{ locale: ru })} `;
+            res += `\n | Заходил    \t| ${format(new Date((response[0].last_seen.time * 1000 - 7200)), 'dd MMMM yyyy',{ locale: ru })} `;
+            res += `\n | Время      \t| ${format(new Date((response[0].last_seen.time * 1000 - 7200)), 'HH:mm',{ locale: ru })} `;
             res += `\n | Устройство \t| ${resolve_dev(response[0]["last_seen"]['platform'])} `;
             res += "\n ```";
             if (hist) {
